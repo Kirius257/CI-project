@@ -30,6 +30,7 @@ jobs:
       - name: Run clang-tidy
         run: |
           clang-tidy src/*.cpp -p build
+
   memory-check-linux:
     runs-on: ubuntu-latest
     steps:
@@ -38,11 +39,12 @@ jobs:
         run: |
           cmake -B build -DCMAKE_BUILD_TYPE=Debug
           cmake --build build
+      - name: Update package list
+        run: sudo apt-get update
       - name: Install Valgrind
-        run: sudo apt-get install -y valgrind
+        run: sudo apt-get install -y valgrind --fix-missing
       - name: Run Valgrind
         run: valgrind --leak-check=full ./build/examples
-
 
   memory-check-windows:
     runs-on: windows-latest
@@ -61,4 +63,4 @@ jobs:
         shell: cmd
         run: |
           set PATH=%PATH%;%CD%\DrMemory-Windows-2.6.0\bin
-          drmemory -- build\Debug\examples.exe
+          drmemory -no_callstack_init -- build\Debug\examples.exe
