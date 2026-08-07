@@ -56,24 +56,17 @@ jobs:
         run: valgrind --leak-check=full ./build/examples
 
   # ==========================================
-  # 4. Проверка памяти (Windows / Dr. Memory)
+  # 4. Проверка памяти (Windows / Valgrind via WSL)
   # ==========================================
   memory-check-windows:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Build
+      - name: Enable WSL
         run: |
-          cmake -B build -DCMAKE_BUILD_TYPE=Debug
-          cmake --build build --config Debug
-      - name: Install Dr. Memory
-        shell: pwsh
+          wsl --install -d Ubuntu
+      - name: Build and run Valgrind via WSL
         run: |
-          Invoke-WebRequest -Uri "https://github.com/DynamoRIO/drmemory/releases/download/release_2.6.0/DrMemory-Windows-2.6.0.zip" -OutFile drmemory.zip
-          Expand-Archive -Path drmemory.zip -DestinationPath .
-      - name: Run Dr. Memory
-        shell: cmd
-        run: |
-          set PATH=%PATH%;%CD%\DrMemory-Windows-2.6.0\bin
-          mkdir logs
-          drmemory -logdir logs -ignore_kernel -- build\Debug\examples.exe
+          wsl bash -c "sudo apt-get update && sudo apt-get install -y valgrind cmake g++"
+          wsl bash -c "cmake -B build -DCMAKE_BUILD_TYPE=Debug && cmake --build build"
+          wsl bash -c "valgrind --leak-check=full ./build/examples"
