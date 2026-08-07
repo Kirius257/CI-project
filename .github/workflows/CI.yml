@@ -46,7 +46,7 @@ jobs:
       - name: Run Valgrind
         run: valgrind --leak-check=full ./build/examples
 
-memory-check-windows:
+  memory-check-windows:
   runs-on: windows-latest
   steps:
     - uses: actions/checkout@v4
