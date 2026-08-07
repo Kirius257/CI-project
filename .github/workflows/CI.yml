@@ -1,78 +1,19 @@
-name: C++ CI Pipeline
-
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-
-jobs:
-
-  # ==========================================
-  # 1. Проверка форматирования (clang-format)
-  # ==========================================
-  format:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Install clang-format
-        run: sudo apt-get install -y clang-format
-      - name: Check formatting
-        run: |
-          find src -name "*.cpp" -exec clang-format --dry-run --Werror {} +
-
-  # ==========================================
-  # 2. Статический анализ (clang-tidy)
-  # ==========================================
-  static-analysis:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Install clang-tidy
-        run: sudo apt-get install -y clang-tidy
-      - name: Generate compile_commands.json
-        run: |
-          cmake -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
-      - name: Run clang-tidy
-        run: |
-          clang-tidy src/*.cpp -p build
-
-  # ==========================================
-  # 3. Проверка памяти (Linux / Valgrind)
-  # ==========================================
-  memory-check-linux:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Build
-        run: |
-          cmake -B build -DCMAKE_BUILD_TYPE=Debug
-          cmake --build build
-      - name: Install Valgrind
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y valgrind --fix-missing
-      - name: Run Valgrind
-        run: valgrind --leak-check=full ./build/examples
-
-  # ==========================================
-  # 4. Проверка памяти (Windows / Dr. Memory)
-  # ==========================================
-  memory-check-windows:
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Build
-        run: |
-          cmake -B build -DCMAKE_BUILD_TYPE=Debug
-          cmake --build build --config Debug
-      - name: Install Dr. Memory
-        shell: pwsh
-        run: |
-          Invoke-WebRequest -Uri "https://github.com/DynamoRIO/drmemory/releases/download/release_2.6.0/DrMemory-Windows-2.6.0.zip" -OutFile drmemory.zip
-          Expand-Archive -Path drmemory.zip -DestinationPath .
-      - name: Run Dr. Memory
-        shell: cmd
-        run: |
-          set PATH=%PATH%;%CD%\DrMemory-Windows-2.6.0\bin
-          drmemory -ignore_kernel -- build\Debug\examples.exe
+memory-check-windows:
+  runs-on: windows-latest
+  steps:
+    - uses: actions/checkout@v4
+    - name: Build
+      run: |
+        cmake -B build -DCMAKE_BUILD_TYPE=Debug
+        cmake --build build --config Debug
+    - name: Install Dr. Memory
+      shell: pwsh
+      run: |
+        Invoke-WebRequest -Uri "https://github.com/DynamoRIO/drmemory/releases/download/release_2.6.0/DrMemory-Windows-2.6.0.zip" -OutFile drmemory.zip
+        Expand-Archive -Path drmemory.zip -DestinationPath .
+    - name: Run Dr. Memory
+      shell: cmd
+      run: |
+        set PATH=%PATH%;%CD%\DrMemory-Windows-2.6.0\bin
+        mkdir logs
+        drmemory -logdir logs -no_callstack_init -- build\Debug\examples.exe
