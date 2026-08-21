@@ -8,9 +8,6 @@ on:
 
 jobs:
 
-  # ==========================================
-  # 1. Проверка форматирования (clang-format)
-  # ==========================================
   format:
     runs-on: ubuntu-latest
     steps:
@@ -21,9 +18,6 @@ jobs:
         run: |
           find src -name "*.cpp" -exec clang-format --dry-run --Werror {} +
 
-  # ==========================================
-  # 2. Статический анализ (clang-tidy)
-  # ==========================================
   static-analysis:
     runs-on: ubuntu-latest
     steps:
@@ -37,9 +31,6 @@ jobs:
         run: |
           clang-tidy src/*.cpp -p build
 
-  # ==========================================
-  # 3. Проверка памяти (Linux / Valgrind)
-  # ==========================================
   memory-check-linux:
     runs-on: ubuntu-latest
     steps:
@@ -55,9 +46,6 @@ jobs:
       - name: Run Valgrind
         run: valgrind --leak-check=full ./build/examples
 
-  # ==========================================
-  # 4. Проверка памяти (Windows / Valgrind via WSL)
-  # ==========================================
   memory-check-windows:
     runs-on: windows-latest
     steps:
